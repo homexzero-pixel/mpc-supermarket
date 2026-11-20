@@ -102,6 +102,22 @@ test('phone shopping trip: QR -> scan (once) -> search -> loose produce -> Pay a
   const o = h.ctx.db.get<any>('SELECT * FROM orders WHERE code = ?', code);
   assert.equal(h.ctx.db.get<any>('SELECT count(*) n FROM order_lines WHERE order_id = ?', o.id).n, 3);
 
+  // picking up more items after submitting: a second basket must be a deliberate choice
+  const ticketUrl = page.url();
+  await page.goto(`${h.base}/b/main/search?q=curd`);
+  await page.locator('.product').first().locator('[data-add]').click();
+  await page.goto(`${h.base}/basket`);
+  await page.waitForSelector('[data-existing-order]');
+  assert.match((await page.textContent('[data-existing-order]'))!, new RegExp(code));
+  await page.click('[data-submit]');
+  await page.waitForTimeout(300);
+  assert.match(page.url(), /\/basket$/, 'not sent without confirming it is a new basket');
+  await page.check('[data-confirm-new]');
+  await page.click('[data-submit]');
+  await page.waitForURL(/\/t\//);
+  assert.notEqual((await page.textContent('.ticket-code'))!.trim(), code);
+  await page.goto(ticketUrl);
+
   // cashier pays -> ticket updates live
   await h.worker.processOutbox();
   const cashier = await h.staff('cashier1');

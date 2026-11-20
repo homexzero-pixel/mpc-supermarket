@@ -114,10 +114,13 @@
     }
     renderActiveTicket();
   }
+  function activeTickets() {
+    return load(TICKETS_KEY, []).filter(function (t) { return Date.now() - t.at < 4 * 3600e3 && !t.closed; });
+  }
   function renderActiveTicket() {
     var dock = $('[data-dock]');
     if (!dock || $('[data-ticket]')) return;
-    var tickets = load(TICKETS_KEY, []).filter(function (t) { return Date.now() - t.at < 4 * 3600e3 && !t.closed; });
+    var tickets = activeTickets();
     var old = $('[data-active-ticket]');
     if (old) old.remove();
     if (!tickets.length) return;
@@ -403,6 +406,18 @@
     $('[data-est-note]', root).hidden = !s.estimated;
     var notIn = $('[data-not-in-store]', root);
     if (notIn) notIn.hidden = root.getAttribute('data-in-store') === '1';
+    var act = activeTickets();
+    var ex = $('[data-existing-order]', root);
+    if (ex) ex.remove();
+    if (act.length && s.count > 0) {
+      var t = act[act.length - 1];
+      var box = el('div', { class: 'notice', 'data-existing-order': '' }, [
+        el('p', {}, [el('strong', { text: S.order + ' ' + t.code + (t.counter ? ' · ' + S.go_to_counter + ' ' + t.counter : '') })]),
+        el('p', { text: S.add_more_note }),
+        el('label', { class: 'check' }, [el('input', { type: 'checkbox', 'data-confirm-new': '' }), LANG === 'ta' ? 'இது தனி, புதிய கூடை' : 'This is a separate, new basket']),
+      ]);
+      $('[data-summary]', root).insertBefore(box, $('[data-submit]', root));
+    }
     onlineState();
   }
 
@@ -464,6 +479,10 @@
     var notIn = $('[data-not-in-store]', root);
     if (notIn && !notIn.hidden && !$('[data-confirm-in-store]', root).checked) {
       notIn.classList.add('attention'); $('[data-confirm-in-store]', root).focus(); return;
+    }
+    var confirmNew = $('[data-confirm-new]', root);
+    if (confirmNew && !confirmNew.checked && !b.pending) {
+      confirmNew.closest('.notice').classList.add('attention'); confirmNew.focus(); return;
     }
     if (!navigator.onLine) { onlineState(); return; }
     // One idempotency key per checkout attempt, reused for every retry of that attempt.

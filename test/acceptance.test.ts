@@ -362,3 +362,45 @@ describe('safety & privacy', () => {
     assert.equal(t.counter.number, other === 'ctr_1' ? 1 : 2);
   });
 });
+
+describe('owner & manager screens', () => {
+  test('every admin page renders and key actions work', async () => {
+    const owner = await h.staff('owner');
+    for (const p of ['/admin', '/admin?filter=paid', '/admin/reconcile', '/admin/catalogue', '/admin/settings', '/admin/staff', '/admin/demo', '/admin/branches/br_main/sign', '/admin/catalogue/template.csv']) {
+      const r = await owner.get(p);
+      assert.equal(r.status, 200, p);
+    }
+    const png = await owner.get('/admin/branches/br_main/qr.png');
+    assert.equal(png.headers.get('content-type'), 'image/png');
+    const svg = await (await owner.get('/admin/branches/br_main/qr.svg')).text();
+    assert.match(svg, /<svg/);
+    const sign = await (await owner.get('/admin/branches/br_main/sign')).text();
+    assert.match(sign, /Scan to shop · Pick your items · Pay at the counter/);
+    // pause / resume
+    assert.equal((await owner.post('/admin/branches/br_main/accepting', { accepting: '0', pause_message_en: 'Stock-taking' })).status, 200);
+    assert.equal((await h.customer().checkout(basket(), key())).status, 423);
+    await owner.post('/admin/branches/br_main/accepting', { accepting: '1' });
+    // new print agent token, test slip
+    const ag = await owner.post('/admin/branches/br_main/agents', { name: 'Counter PC 2' });
+    assert.match(ag.body.token, /^mpcagent_/);
+    assert.equal((await owner.post('/admin/printers/prn_c2/test')).status, 200);
+    assert.ok(h.ctx.db.get(`SELECT 1 FROM print_jobs WHERE kind = 'test' AND printer_id = 'prn_c2'`));
+    // scale rules validated
+    assert.equal((await owner.post('/admin/branches/br_main/scale-rules', { rules: '[{"name":"bad"}]' })).status, 400);
+    // store details: published only when confirmed, then appear in structured data
+    const info = await owner.post('/admin/branches/br_main/store-info', { name_en: 'Main Store', address: '1 Market Road', locality: 'Chennai', phone: '+91 00000 00000', hours: 'Mon-Sun 07:00-22:00', verified: '1' });
+    assert.equal(info.status, 200);
+    const home = await (await fetch(`${h.base}/`)).text();
+    assert.match(home, /"@type":"GroceryStore"/);
+    assert.match(home, /1 Market Road/);
+    assert.match(home, /"dayOfWeek":\["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"\]/);
+    // CSV import through the admin endpoint
+    const csv = 'pos_item_id,name_en,department,pack_label,sold_by,price,barcodes\nX1,Test Jaggery,oils-masala,500 g,pack,48.00,2000000000017\nX2,,oils-masala,1 kg,pack,10,\n';
+    const imp = await owner.post('/admin/catalogue/import', { csv });
+    assert.equal(imp.body.stats.inserted, 1);
+    assert.equal(imp.body.stats.skipped, 1);
+    // cashier role cannot reach owner tools
+    const cashier = await h.staff('cashier2');
+    assert.equal((await cashier.post('/admin/staff', { username: 'x' })).status, 403);
+  });
+});

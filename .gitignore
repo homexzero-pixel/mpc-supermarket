@@ -7,3 +7,5 @@ data/sim-prints/
 *.log
 test-results/
 data/*.token
+data/demo-run/
+data/*.json

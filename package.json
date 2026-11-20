@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "NODE_OPTIONS='--disable-warning=ExperimentalWarning' tsx watch src/server.ts",
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && node -e \"require('fs').cpSync('src/db/migrations','dist/src/db/migrations',{recursive:true})\"",
     "start": "node --disable-warning=ExperimentalWarning dist/src/server.js",
     "agent": "node --disable-warning=ExperimentalWarning dist/agent/print-agent.js",
     "agent:dev": "NODE_OPTIONS='--disable-warning=ExperimentalWarning' tsx agent/print-agent.ts",
@@ -21,7 +21,8 @@
     "demo:run": "NODE_OPTIONS='--disable-warning=ExperimentalWarning' tsx scripts/demo-purchase.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "NODE_OPTIONS='--disable-warning=ExperimentalWarning' tsx --test test/*.test.ts",
-    "test:e2e": "NODE_OPTIONS='--disable-warning=ExperimentalWarning' tsx --test test/browser.e2e.ts"
+    "test:e2e": "NODE_OPTIONS='--disable-warning=ExperimentalWarning' tsx --test test/browser.e2e.ts",
+    "setup:branch": "NODE_OPTIONS='--disable-warning=ExperimentalWarning' tsx scripts/setup-branch.ts"
   },
   "dependencies": {
     "@fontsource/noto-sans-tamil": "^5.3.0",
