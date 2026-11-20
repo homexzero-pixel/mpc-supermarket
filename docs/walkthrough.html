@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scan & Shop walkthrough</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Noto+Sans+Tamil:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE work: a project handover the owner can click through
+   IDEA the shopping trip itself: phone in hand, counter slip printing, cashier taking over
+   PICTURE a working phone prototype beside a thermal slip that prints and a cashier panel
+   COLOUR leaf green ground band, white paper, mango accent for counters and money
+   TYPE Poppins + Noto Sans Tamil (the app's own), monospace only on the slip
+   LAYOUT finding across the top; phone | slip | cashier below; stacked on a phone */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#0c1a12);--ink:light-dark(#16211a,#e8f1ea);--soft:light-dark(#4a574e,#a9bcae);--line:light-dark(#e2e6df,#24382b);--green:#0b5a2a;--leaf:light-dark(#e9f3e5,#16301f);--mango:#f2b632;--panel:light-dark(#f6f8f4,#122319);--red:light-dark(#b42318,#ff8a7a)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+[hidden]{display:none!important}
+html{scroll-padding-top:72px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Poppins,'Noto Sans Tamil',system-ui,sans-serif;overflow-x:clip}
+.band{padding:clamp(28px,4vw,56px) max(5vw,16px)}
+.wrap{max-width:1240px;margin:0 auto}
+h1{font-size:clamp(30px,4.4vw,48px);line-height:1.05;letter-spacing:-.02em;margin:0 0 12px;text-wrap:balance;max-width:20ch}
+h2{font-size:clamp(22px,2.4vw,30px);line-height:1.1;letter-spacing:-.01em;margin:0 0 14px}
+h3{font-size:17px;margin:0 0 8px}
+p{margin:0 0 12px}
+.lead{font-size:17px;color:var(--soft);max-width:60ch}
+.top{display:grid;gap:24px;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);align-items:end}
+.figs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.fg{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.fg b{display:block;font-size:clamp(26px,3vw,36px);line-height:1.1}
+.fg span{font-size:13px;color:var(--soft)}
+.fg.hot b{color:var(--red)}
+.stage{background:var(--green);color:#fff}
+.stage .hint{color:#d6eadb;font-size:15px;margin:0 0 18px;max-width:70ch}
+.trip{display:grid;gap:22px;grid-template-columns:360px minmax(0,300px) minmax(0,1fr);align-items:start}
+.phone{width:100%;max-width:360px;margin:0 auto;background:#111;border-radius:42px;padding:12px;box-shadow:0 18px 40px rgba(0,0,0,.35)}
+.scr{background:#fffdf6;color:#16211a;border-radius:32px;height:640px;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.sb{display:flex;justify-content:space-between;padding:10px 22px 4px;font-size:13px;font-weight:600}
+.ph{display:flex;align-items:center;gap:8px;padding:6px 14px 10px;border-bottom:1px solid #ebe8dc}
+.wm{font-weight:700;color:var(--green);font-size:20px;letter-spacing:-.02em}
+.tag{font-size:12px;font-weight:600;color:var(--green);background:#e9f3e5;border-radius:99px;padding:2px 9px}
+.lg{margin-left:auto;border:1px solid #e2ded0;background:#fff;border-radius:99px;font:inherit;font-size:13px;padding:4px 10px;min-height:32px;cursor:pointer;color:#16211a}
+.body{flex:1;overflow-y:auto;padding:12px 14px 90px}
+.srch{display:flex;align-items:center;gap:8px;border:1.5px solid #e2ded0;border-radius:99px;padding:9px 14px;color:#6b766e;font-size:14px;background:#fff;margin-bottom:12px}
+.big{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;border:0;border-radius:99px;background:var(--green);color:#fff;font:600 16px Poppins,'Noto Sans Tamil',sans-serif;cursor:pointer;margin-bottom:14px}
+.big.alt{background:#e9f3e5;color:var(--green)}
+.big:disabled{opacity:.45;cursor:not-allowed}
+.plist{display:grid;gap:8px}
+.pr{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:center;background:#fff;border:1px solid #ebe8dc;border-radius:14px;padding:8px}
+.pr svg{width:44px;height:44px}
+.pn{font-weight:600;font-size:14px;line-height:1.25}
+.pp{font-size:12px;color:#5c675f}
+.add{min-height:36px;min-width:64px;border:0;border-radius:99px;background:var(--green);color:#fff;font:600 13px Poppins,'Noto Sans Tamil',sans-serif;cursor:pointer;padding:0 12px}
+.stp{display:inline-flex;align-items:center;background:var(--green);color:#fff;border-radius:99px;padding:2px}
+.stp button{width:32px;height:32px;border:0;border-radius:50%;background:rgba(255,255,255,.16);color:#fff;font-size:17px;font-weight:700;cursor:pointer}
+.stp span{min-width:24px;text-align:center;font-weight:700;font-size:14px}
+.bar{position:absolute;left:12px;right:12px;bottom:14px;display:flex;justify-content:space-between;align-items:center;background:#16211a;color:#fff;border:0;border-radius:99px;padding:13px 18px;font:600 14px Poppins,'Noto Sans Tamil',sans-serif;cursor:pointer}
+.bar em{font-style:normal;color:var(--mango)}
+.vf{position:relative;height:220px;border-radius:18px;background:#0d1410;overflow:hidden;margin-bottom:12px}
+.vf i{position:absolute;left:14%;right:14%;top:32%;bottom:32%;border:3px solid var(--mango);border-radius:12px}
+.vf b{position:absolute;left:18%;right:18%;height:2px;background:#ff5c4d;top:50%;animation:sweep 1.4s ease-in-out infinite alternate}
+.vf .code{position:absolute;left:0;right:0;bottom:12px;text-align:center;color:#cfe3d4;font:12px 'JetBrains Mono',monospace}
+@keyframes sweep{from{top:36%}to{top:62%}}
+.card{background:#fff;border:1px solid #ebe8dc;border-radius:16px;padding:14px;margin-bottom:12px}
+.ok{color:var(--green);font-weight:700}
+.wopt{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.wopt button{min-height:44px;border:0;border-radius:99px;background:#e9f3e5;color:var(--green);font:600 14px Poppins,sans-serif;cursor:pointer}
+.bl{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;padding:10px 0;border-bottom:1px dashed #e2ded0;font-size:14px}
+.bl .s{font-size:12px;color:#5c675f}
+.amt{font-weight:700;white-space:nowrap;text-align:right}
+.tot{display:flex;justify-content:space-between;align-items:baseline;margin:14px 0 4px;font-size:16px}
+.tot b{font-size:22px;white-space:nowrap}
+.tk{text-align:center;border:2px solid var(--green);border-radius:22px;padding:18px 12px;background:#fff}
+.tk small{display:block;letter-spacing:.08em;color:#5c675f;font-size:12px}
+.tk .cd{font-size:64px;font-weight:700;color:var(--green);line-height:1;margin:4px 0 10px}
+.tk .ct{font-size:20px;font-weight:600}
+.tk .ct b{display:inline-block;background:var(--mango);color:#16211a;border-radius:12px;padding:0 12px;font-size:28px;vertical-align:middle}
+.st{display:inline-flex;align-items:center;gap:7px;background:#e9f3e5;color:#08471f;border-radius:99px;padding:5px 12px;font-weight:600;font-size:14px;margin-top:10px}
+.st:before{content:"";width:9px;height:9px;border-radius:50%;background:currentColor}
+.st.paid{background:var(--mango);color:#16211a}
+.col h3{color:#fff}
+.col .sub{color:#d6eadb;font-size:13px;margin:0 0 10px}
+.printer{background:#1d2a21;border-radius:16px 16px 8px 8px;padding:10px 14px 0;box-shadow:inset 0 -6px 0 #121b15}
+.slot{height:8px;background:#060a07;border-radius:4px;margin:0 6px}
+.roll{overflow:hidden;margin:0 20px}
+.paper{background:#fffef8;color:#1a1a1a;font:12px/1.35 'JetBrains Mono',ui-monospace,monospace;padding:12px 10px 16px;white-space:pre;overflow-x:auto;box-shadow:0 6px 12px rgba(0,0,0,.25);clip-path:polygon(0 0,100% 0,100% 100%,95% 98%,90% 100%,85% 98%,80% 100%,75% 98%,70% 100%,65% 98%,60% 100%,55% 98%,50% 100%,45% 98%,40% 100%,35% 98%,30% 100%,25% 98%,20% 100%,15% 98%,10% 100%,5% 98%,0 100%)}
+.paper.out{animation:feed 1.2s steps(14) both}
+@keyframes feed{from{transform:translateY(-100%)}to{transform:none}}
+.idle{color:#9fb7a6;font:12px 'JetBrains Mono',monospace;padding:28px 10px;text-align:center;border:1px dashed #3d5a45;border-radius:8px;margin:10px 20px}
+.cash{background:#fff;color:#16211a;border-radius:16px;padding:14px}
+.qrow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid #e2e6df;border-radius:12px;padding:10px 12px;margin-bottom:12px}
+.qrow .c{font-size:24px;font-weight:700;color:var(--green)}
+.badge{display:inline-block;font-size:12px;font-weight:700;border-radius:6px;padding:1px 7px;background:#fff4d6;border:1px solid #f3d98a;margin:2px 4px 0 0}
+.badge.g{background:#e9f3e5;border-color:#c9e2c0;color:#08471f}
+.badge.r{background:#fdecea;border-color:#f5c2bc;color:#7a1a12}
+.cash label{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;margin:8px 0;flex-wrap:wrap}
+.cash input{font:16px Poppins,sans-serif;width:100px;border:1.5px solid #d9ddd5;border-radius:8px;padding:7px 9px}
+.btn{min-height:44px;border:1.5px solid #d9ddd5;background:#fff;color:#16211a;border-radius:99px;font:600 14px Poppins,sans-serif;padding:0 16px;cursor:pointer}
+.btn.p{background:var(--green);border-color:var(--green);color:#fff}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.pay{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.log{list-style:none;margin:12px 0 0;padding:10px 0 0;border-top:1px solid #e2e6df;font-size:13px;color:#4a574e;max-height:170px;overflow-y:auto}
+.log li{padding:2px 0}
+.log time{font-variant-numeric:tabular-nums;color:#8a958d;margin-right:6px}
+.reset{margin-top:14px;background:transparent;color:#fff;border-color:rgba(255,255,255,.4)}
+.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}
+ul.tick{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+ul.tick li{padding-left:28px;position:relative}
+ul.tick li:before{content:"";position:absolute;left:0;top:5px;width:16px;height:16px;border-radius:50%;background:var(--green)}
+ul.tick.todo li:before{background:transparent;border:2px solid var(--mango)}
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:14px}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:13px;color:var(--soft);font-weight:600;background:var(--panel)}
+tr:last-child td{border-bottom:0}
+td.res{white-space:nowrap;font-weight:600;color:var(--green)}
+:root[data-theme=dark] td.res{color:#7fd39a}
+.need{list-style:none;padding:0;margin:0;display:grid;gap:10px;counter-reset:n}
+.need li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.need input{width:22px;height:22px;margin:2px 0 0;accent-color:var(--green)}
+.need label{cursor:pointer}
+.need strong{display:block}
+.need span{color:var(--soft);font-size:15px}
+.cmd{display:flex;gap:8px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 8px 8px 14px;margin-bottom:8px}
+.cmd code{flex:1;font:14px 'JetBrains Mono',monospace;overflow-wrap:anywhere}
+.cmd button{min-height:36px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;font:500 13px Poppins,sans-serif;padding:0 12px;cursor:pointer}
+.note{font-size:14px;color:var(--soft)}
+.foot{border-top:1px solid var(--line);font-size:14px;color:var(--soft)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--mango);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media(max-width:1100px){.trip{grid-template-columns:360px minmax(0,1fr)}.trip .col.cashier{grid-column:2}}
+@media(max-width:820px){.top{grid-template-columns:1fr}.trip{grid-template-columns:1fr}.trip .col.cashier{grid-column:auto}.cols{grid-template-columns:1fr}}
+@media(max-width:600px){table{font-size:13px}th,td{padding:8px 10px}.stack thead{display:none}.stack tr{display:grid;padding-block:8px;border-bottom:1px solid var(--line)}.stack td{display:flex;justify-content:space-between;gap:12px;border:0;padding:3px 12px}.stack td:before{content:attr(data-l);color:var(--soft);font-size:12px;flex:none}.figs{grid-template-columns:1fr 1fr 1fr}.scr{height:600px}}
+@media(prefers-reduced-motion:reduce){.paper.out,.vf b{animation:none}}
+</style>
+</head>
+<body>
+
+<section class="band"><div class="wrap top">
+  <div>
+    <h1>Scan & Shop is built and passes every acceptance scenario</h1>
+    <p class="lead">Two connections are left before Madhuram Pazhamudhir Cholai can go live: your POS and your counter printer. Everything else runs today against a POS simulator and a simulated printer.</p>
+  </div>
+  <div class="figs">
+    <div class="fg"><b>40</b><span>automated tests passing</span></div>
+    <div class="fg"><b>11 / 11</b><span>scenarios from the brief</span></div>
+    <div class="fg hot"><b>2</b><span>connections left: POS, printer</span></div>
+  </div>
+</div></section>
+
+<section class="band stage" aria-labelledby="try-h"><div class="wrap">
+  <h2 id="try-h">Try one shopping trip</h2>
+  <p class="hint">Add products or tap Scan, then Pay at Counter. The counter slip prints and the cashier panel takes over: weigh the tomatoes and take payment. Sample products and simulated billing, like the app's demo mode.</p>
+  <div class="trip">
+    <div class="phone" aria-label="Customer phone prototype"><div class="scr">
+      <div class="sb"><span>9:41</span><span>5G ▮▮▮</span></div>
+      <div class="ph"><span class="wm">MPC</span><span class="tag">Main Store</span><button class="lg" id="lang" type="button">தமிழ்</button></div>
+      <div class="body" id="screen"></div>
+      <button class="bar" id="bar" type="button" hidden></button>
+    </div></div>
+
+    <div class="col">
+      <h3>Counter 2 printer</h3>
+      <p class="sub">80 mm thermal slip, sent by the store print agent</p>
+      <div class="printer"><div class="slot"></div></div>
+      <div class="roll" id="roll"><div class="idle">Waiting for a basket…</div></div>
+    </div>
+
+    <div class="col cashier">
+      <h3>Cashier screen</h3>
+      <p class="sub">What the person at Counter 2 sees</p>
+      <div class="cash" id="cash"></div>
+      <button class="btn reset" id="reset" type="button">Start the trip again</button>
+    </div>
+  </div>
+  <p class="sr" aria-live="polite" id="live"></p>
+</div></section>
+
+<section class="band" aria-labelledby="t-h"><div class="wrap">
+  <h2 id="t-h">Every scenario from the brief passes</h2>
+  <p class="note">Run with <code>npm test</code> (37 tests: unit and acceptance against a real server, the POS simulator and the real print-agent code) and <code>npm run test:e2e</code> (3 Chromium tests at phone and desktop sizes).</p>
+  <div class="tw"><table class="stack">
+    <thead><tr><th>Scenario</th><th>What happened</th><th>Result</th></tr></thead>
+    <tbody id="tests"></tbody>
+  </table></div>
+  <p class="note" style="margin-top:12px">Not tested yet: real iPhone and Android phones (only emulated screen sizes), scanning printed barcodes with a real camera, a screen-reader walkthrough, a physical thermal printer and the live POS.</p>
+</div></section>
+
+<section class="band" style="background:var(--panel)" aria-labelledby="w-h"><div class="wrap cols">
+  <div>
+    <h2 id="w-h">Ready now</h2>
+    <ul class="tick" id="ready"></ul>
+  </div>
+  <div>
+    <h2>Limits to know about</h2>
+    <ul class="tick todo" id="limits"></ul>
+  </div>
+</div></section>
+
+<section class="band" aria-labelledby="n-h"><div class="wrap cols">
+  <div>
+    <h2 id="n-h">What I need from you to go live</h2>
+    <ol class="need" id="need"></ol>
+    <p class="note" style="margin-top:10px">Ticks are saved in this browser only.</p>
+  </div>
+  <div>
+    <h2>Run it on your computer</h2>
+    <p class="note">Node.js 22.13 or later. Code is on the <code>claude/sleepy-davinci-bs1u07</code> branch of <code>homexzero-pixel/mpc-supermarket</code>.</p>
+    <div id="cmds"></div>
+    <p class="note">Then open <code>localhost:3000/s/main</code> in a phone-sized window (the entrance QR link) and <code>localhost:3000/staff</code> for the cashier screen, user <code>cashier1</code>, password <code>mpc-demo-2026</code>. The final acceptance test is on site: a real phone at the entrance, and the slip printing at the assigned counter.</p>
+  </div>
+</div></section>
+
+<footer class="band foot"><div class="wrap">Full details are in <code>docs/HANDOVER.md</code>, with setup, print agent, POS integration and a cashier guide in <code>docs/</code>.</div></footer>
+
+<script>
+{
+const P = [
+  { id: 'milk', en: 'Toned Milk', ta: 'டோன்ட் பால்', pack: '500 ml', p: 2700, by: 'pack', code: '0712345005014', g: 'milk' },
+  { id: 'rice', en: 'Ponni Raw Rice', ta: 'பொன்னி பச்சரிசி', pack: '1 kg', p: 6800, by: 'pack', g: 'sack' },
+  { id: 'tom', en: 'Tomato', ta: 'தக்காளி', pack: 'per kg', p: 4000, by: 'weight', g: 'tomato' },
+  { id: 'coco', en: 'Coconut', ta: 'தேங்காய்', pack: '1 pc', p: 3500, by: 'piece', g: 'coconut' },
+  { id: 'curd', en: 'Fresh Curd', ta: 'தயிர்', pack: '500 g', p: 3500, by: 'pack', g: 'cup' },
+  { id: 'cof', en: 'Filter Coffee Powder', ta: 'ஃபில்டர் காபி தூள்', pack: '250 g', p: 15000, by: 'pack', g: 'tin' }
+];
+const T = {
+  en: { scan: 'Scan a product', search: 'Search rice, milk, tomato…', add: 'Add', view: 'View basket', items: 'items', item: 'item', pay: 'Pay at Counter', est: 'Estimated total', total: 'Total', weigh: 'Weigh at counter', order: 'ORDER', go: 'Go to Counter', bring: 'Bring your basket to the counter.', waiting: 'Waiting at the counter', checking: 'Cashier is checking your basket', paid: 'Paid, thank you!', added: 'Added', another: 'Scan another', back: '← Back', howmuch: 'How much? (approximate)', empty: 'Your basket is empty.', bill: 'Bill no.', still: 'Camera held still on the packet: added once.', popular: 'Popular today', each: 'each', kg: '/ kg', more: 'Picked up more? Ask the cashier to add it.' },
+  ta: { scan: 'பொருளை ஸ்கேன் செய்யுங்கள்', search: 'அரிசி, பால், தக்காளி தேடுங்கள்…', add: 'சேர்', view: 'கூடையைப் பார்', items: 'பொருட்கள்', item: 'பொருள்', pay: 'கவுண்டரில் பணம் செலுத்து', est: 'தோராயமான மொத்தம்', total: 'மொத்தம்', weigh: 'கவுண்டரில் எடை போடவும்', order: 'ஆர்டர்', go: 'கவுண்டருக்குச் செல்லுங்கள்', bring: 'உங்கள் கூடையை கவுண்டருக்குக் கொண்டு வாருங்கள்.', waiting: 'கவுண்டரில் காத்திருக்கிறது', checking: 'காசாளர் சரிபார்க்கிறார்', paid: 'செலுத்தப்பட்டது, நன்றி!', added: 'சேர்க்கப்பட்டது', another: 'இன்னொன்றை ஸ்கேன் செய்', back: '← பின்', howmuch: 'எவ்வளவு? (தோராயமாக)', empty: 'உங்கள் கூடை காலியாக உள்ளது.', bill: 'பில் எண்', still: 'கேமரா அசையாமல்: ஒரு முறை மட்டும் சேர்க்கப்பட்டது.', popular: 'இன்று அதிகம் வாங்கப்படுபவை', each: 'ஒன்றுக்கு', kg: '/ கிலோ', more: 'மேலும் எடுத்தீர்களா? காசாளரிடம் சேர்க்கச் சொல்லுங்கள்.' }
+};
+const TESTS = [
+  ['Customer scans the entrance QR', 'Branch opens straight into shopping mode', 'Pass'],
+  ['Camera held still on one packet', 'Added once; "Scan another" adds the next identical packet', 'Pass'],
+  ['Two packets and loose tomatoes', 'One held basket in the POS; slip says WEIGH AT COUNTER', 'Pass'],
+  ['Double-tap, or refresh after a timeout', 'Same order code, one held basket, one original slip', 'Pass'],
+  ['Price changes while shopping', 'Customer sees old and new price before submitting', 'Pass'],
+  ['Printer switched off', 'Order still on cashier screen, alert raised, retry prints once', 'Pass'],
+  ['POS unreachable, then back (reply lost)', 'Ticket shows pending; basket reaches the POS once', 'Pass'],
+  ['Cashier adds an item and weighs tomatoes', 'POS re-prices and rounds; change history kept', 'Pass'],
+  ['Two counters finish the same order', 'One payment, one sale, one stock posting', 'Pass'],
+  ['Customer leaves without paying', 'Expires, voided in POS, not counted as sales', 'Pass'],
+  ['Visitor arrives from Google', 'Product page works without QR or login', 'Pass']
+];
+const READY = ['Guest shopping in English and Tamil, search that understands "thakkali" and "tomoto"', 'Phone camera barcode scanning, with typing as a fallback', 'Loose produce priced as an estimate until weighed', 'Pay at Counter that never creates a duplicate order', 'Automatic counter slip with a scannable order barcode', 'Cashier screen: verify, weigh, add, transfer, cancel, reprint COPY', 'Payment marked paid only when the POS confirms', 'Owner tools: pause, counters, printers, QR sign, catalogue import, daily sales, reconciliation', 'Google-ready public pages; baskets and staff pages kept private'];
+const LIMITS = ['POS connector uses placeholder addresses until we have your vendor\'s API', 'Slips print in English; Tamil on thermal paper needs image printing (not built yet)', 'Products, branch name and Tamil wording are samples until you approve them', 'Stock is not held for waiting baskets, and offers are applied by the POS at payment', 'Built for one shop on one server; a bigger database is needed before adding many'];
+const NEED = [
+  ['POS API documentation and a test account', 'To connect held bills, payments and the product list'],
+  ['Can your POS open a held bill from a scanned code?', 'Decides whether cashiers stay in one screen'],
+  ['Printer make, model, paper width and connection', 'Plus the counter PC\'s operating system'],
+  ['Photos of 3 to 5 weighing-scale labels', 'To read weight or price from produce stickers'],
+  ['Approved Tamil spelling, store details and domain', 'Address, phone and hours exactly as on Google']
+];
+const CMDS = ['npm install', 'npm run demo', 'npm run demo:run'];
+
+const $ = (s) => document.querySelector(s);
+const rs = (p) => { const r = Math.floor(p / 100), q = p % 100; return '₹' + r.toLocaleString('en-IN') + (q ? '.' + String(q).padStart(2, '0') : ''); };
+const slipRs = (p) => 'Rs.' + Math.floor(p / 100) + '.' + String(p % 100).padStart(2, '0');
+const wAmt = (per, g) => Math.floor((2 * per * g + 1000) / 2000);
+const now = () => new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+const GL = {
+  milk: '<rect x="14" y="10" width="16" height="26" rx="3" fill="#fff" stroke="#2f6db5" stroke-width="2.5"/><rect x="14" y="22" width="16" height="7" fill="#2f6db5"/>',
+  sack: '<path d="M11 15h22l-2 22H13z" fill="#e9d9b6"/><path d="M11 15c3-6 19-6 22 0" fill="#d4be8d"/>',
+  tomato: '<circle cx="22" cy="25" r="12" fill="#d94a2b"/><path d="M22 13c-4-4-8-4-10-3 2 3 6 4 10 3zm0 0c4-4 8-4 10-3-2 3-6 4-10 3z" fill="#3e7d2b"/>',
+  coconut: '<circle cx="22" cy="24" r="12" fill="#7a5230"/><circle cx="18" cy="20" r="2" fill="#4a2f18"/><circle cx="25" cy="20" r="2" fill="#4a2f18"/>',
+  cup: '<path d="M12 16h20l-3 20H15z" fill="#fff" stroke="#9db8d6" stroke-width="2"/><rect x="11" y="12" width="22" height="5" rx="2" fill="#2f6db5"/>',
+  tin: '<rect x="13" y="12" width="18" height="24" rx="3" fill="#6b3f22"/><rect x="13" y="20" width="18" height="8" fill="#f2b632"/>'
+};
+const BG = { milk: '#e6eef7', sack: '#f4ead8', tomato: '#e3f1da', coconut: '#e3f1da', cup: '#e6eef7', tin: '#fce9c2' };
+const glyph = (p) => '<svg viewBox="0 0 44 44" aria-hidden="true"><rect width="44" height="44" rx="11" fill="' + BG[p.g] + '"/>' + GL[p.g] + '</svg>';
+
+let S;
+const fresh = () => ({ lang: 'en', screen: 'home', lines: {}, scanned: false, order: null, log: [] });
+const t = (k) => T[S.lang][k];
+const name = (p) => S.lang === 'ta' ? p.ta : p.en;
+const byId = (id) => P.find((p) => p.id === id);
+const say = (m) => { $('#live').textContent = m; };
+const log = (m) => { S.log.unshift([now(), m]); };
+
+function totals(lines, actual) {
+  let sum = 0, est = false, n = 0;
+  for (const id in lines) {
+    const p = byId(id), l = lines[id];
+    if (p.by === 'weight') { n += 1; const g = actual ?? l.g; if (g) sum += wAmt(p.p, g); if (actual == null) est = true; }
+    else { n += l.q; sum += p.p * l.q; }
+  }
+  return { sum, est, n };
+}
+function addItem(id, g) {
+  const p = byId(id);
+  const l = S.lines[id] || (S.lines[id] = { q: 0, g: null });
+  if (p.by === 'weight') { l.q = 1; l.g = g; } else l.q = Math.min(l.q + 1, 20);
+}
+function setQ(id, q) { if (q <= 0) delete S.lines[id]; else S.lines[id].q = q; }
+
+function control(p) {
+  const l = S.lines[p.id];
+  if (!l) return '<button class="add" data-add="' + p.id + '">' + t('add') + '</button>';
+  if (p.by === 'weight') return '<span class="stp"><span style="padding:0 10px;font-size:12px">' + (l.g ? '~' + l.g + ' g' : t('weigh')) + '</span><button data-q="' + p.id + '" data-d="-1" aria-label="Remove">×</button></span>';
+  return '<span class="stp"><button data-q="' + p.id + '" data-d="-1" aria-label="One less">−</button><span>' + l.q + '</span><button data-q="' + p.id + '" data-d="1" aria-label="One more">+</button></span>';
+}
+function price(p) { return rs(p.p) + (p.by === 'weight' ? ' ' + t('kg') : p.by === 'piece' ? ' ' + t('each') : ''); }
+
+function screen() {
+  const o = S.order;
+  if (S.screen === 'scan') {
+    const p = byId('milk');
+    return '<button class="big alt" data-go="home">' + t('back') + '</button><div class="vf"><i></i><b></b><div class="code">' + p.code + '</div></div>' +
+      (S.scanned ? '<div class="card"><p><span class="ok">✓ ' + t('added') + '</span> · ' + name(p) + ' ' + p.pack + '<br>' + rs(p.p) + '</p><p style="font-size:13px;color:#5c675f">' + t('still') + '</p><div style="display:flex;justify-content:center;margin-bottom:10px">' + control(p) + '</div><button class="big" data-another>' + t('another') + '</button></div>' : '<p style="text-align:center;color:#5c675f">…</p>');
+  }
+  if (S.screen === 'weight') {
+    const p = byId('tom');
+    return '<button class="big alt" data-go="home">' + t('back') + '</button><div class="card"><h3>' + name(p) + '</h3><p style="color:#5c675f;font-size:14px">' + rs(p.p) + ' ' + t('kg') + ' · ' + t('howmuch') + '</p><div class="wopt">' +
+      [250, 500, 1000, 2000].map((g) => '<button data-w="' + g + '">' + (g >= 1000 ? g / 1000 + ' kg' : g + ' g') + ' · ~' + rs(wAmt(p.p, g)) + '</button>').join('') +
+      '</div><button class="big" data-w="0">' + t('weigh') + '</button></div>';
+  }
+  if (S.screen === 'basket') {
+    const tt = totals(S.lines);
+    if (!tt.n) return '<button class="big alt" data-go="home">' + t('back') + '</button><p>' + t('empty') + '</p>';
+    return '<button class="big alt" data-go="home">' + t('back') + '</button>' + Object.keys(S.lines).map((id) => {
+      const p = byId(id), l = S.lines[id];
+      const a = p.by === 'weight' ? (l.g ? '~' + rs(wAmt(p.p, l.g)) : '—') : rs(p.p * l.q);
+      return '<div class="bl"><div><b>' + name(p) + '</b><div class="s">' + p.pack + ' · ' + price(p) + '</div></div><div class="amt">' + a + '</div><div>' + control(p) + '</div></div>';
+    }).join('') + '<div class="tot"><span>' + (tt.est ? t('est') : t('total')) + '</span><b>' + (tt.est ? '~' : '') + rs(tt.sum) + '</b></div><button class="big" data-pay>' + t('pay') + '</button>';
+  }
+  if (S.screen === 'ticket' && o) {
+    const st = o.status === 'paid' ? '<span class="st paid">' + t('paid') + '</span><p style="font-size:28px;font-weight:700;margin:10px 0 0">' + rs(o.total) + '</p><p style="font-size:13px;color:#5c675f">' + t('bill') + ' ' + o.bill + '</p>' : '<span class="st">' + (o.status === 'checking' ? t('checking') : t('waiting')) + '</span>';
+    return '<div class="tk"><small>' + t('order') + '</small><div class="cd">' + o.code + '</div>' + (o.status === 'paid' ? '' : '<div class="ct">' + t('go') + ' <b>' + o.counter + '</b></div><p style="margin:10px 0 0">' + t('bring') + '</p>') + st + '</div>' + (o.status === 'paid' ? '' : '<p style="font-size:13px;color:#5c675f;text-align:center;margin-top:12px">' + t('more') + '</p>');
+  }
+  return '<div class="srch">⌕ ' + t('search') + '</div><button class="big" data-go="scan">▥ ' + t('scan') + '</button><h3 style="font-size:15px">' + t('popular') + '</h3><div class="plist">' +
+    P.map((p) => '<div class="pr">' + glyph(p) + '<div><div class="pn">' + name(p) + '</div><div class="pp">' + p.pack + ' · ' + price(p) + '</div></div><div>' + control(p) + '</div></div>').join('') + '</div>';
+}
+
+function slip(o) {
+  const W = 32, c = (s) => ' '.repeat(Math.max(0, Math.floor((W - s.length) / 2))) + s;
+  const row = (l, r) => l + ' '.repeat(Math.max(1, W - l.length - r.length)) + r;
+  const out = [c('MPC  SCAN & SHOP'), c('Main Store'), '='.repeat(W), c('COUNTER ' + o.counter), c('*** ' + o.code + ' ***'), c('[ AWAITING PAYMENT ]'), c(o.time), c('DEMO - NOT A REAL ORDER'), '-'.repeat(W)];
+  let i = 0;
+  for (const id in o.lines) {
+    const p = byId(id), l = o.lines[id];
+    i++;
+    if (p.by === 'weight') { out.push(row((i + '. ' + p.en).slice(0, 20), l.g ? '~' + slipRs(wAmt(p.p, l.g)) : 'WEIGH')); out.push('   ' + (l.g ? '~' + l.g + ' g ' : '') + 'WEIGH AT COUNTER'); }
+    else { out.push(row((i + '. ' + p.en + ' ' + p.pack).slice(0, 21), slipRs(p.p * l.q))); out.push('   ' + l.q + ' x ' + slipRs(p.p)); }
+  }
+  const tt = totals(o.lines);
+  out.push('-'.repeat(W), row(tt.est ? 'ESTIMATED TOTAL' : 'TOTAL', slipRs(tt.sum)), '-'.repeat(W), c('|||||||||||||||||||||||'), c('SS-' + o.date + '-' + o.code), c('Scan at the counter'));
+  return out.join('\n');
+}
+
+function cashier() {
+  const o = S.order;
+  if (!o) return '<p style="color:#5c675f;margin:0">No Scan & Shop baskets right now. Submit one from the phone.</p>';
+  const tom = o.lines.tom;
+  const tt = totals(o.lines, tom ? o.weighed : undefined);
+  const needW = tom && o.weighed == null;
+  let h = '<div class="qrow"><span class="c">' + o.code + '</span><div><b>Counter ' + o.counter + '</b> · ' + tt.n + ' items<br>' +
+    '<span class="badge ' + (o.status === 'paid' ? 'g' : '') + '">' + (o.status === 'paid' ? 'Paid' : o.status === 'checking' ? 'At counter' : 'Waiting') + '</span>' +
+    '<span class="badge g">Slip printed</span><span class="badge g">In POS: HB-000042</span>' + (needW ? '<span class="badge">Weigh</span>' : '') +
+    '</div><span style="font-weight:700;white-space:nowrap">' + (o.status === 'paid' ? rs(o.total) : (tt.est ? '~' : '') + rs(tt.sum)) + '</span></div>';
+  if (o.status === 'waiting') h += '<button class="btn p" data-claim style="width:100%">Open at my counter</button>';
+  if (o.status === 'checking') {
+    if (tom) h += '<label for="grams">Tomato, weighed: <input id="grams" type="number" inputmode="numeric" min="1" max="25000" value="' + (o.weighed ?? 620) + '"> g <button class="btn" data-weigh>Set weight</button></label>';
+    h += (needW ? '<p class="badge r" style="display:block;margin:6px 0">Weigh first: Tomato</p>' : '') + '<div class="pay">' + ['Cash', 'UPI', 'Card'].map((m) => '<button class="btn p" data-m="' + m + '"' + (needW ? ' disabled' : '') + '>' + m + '</button>').join('') + '</div>';
+  }
+  if (o.status === 'paid') h += '<p style="margin:0">POS bill <b>' + o.bill + '</b> · ' + o.method + ' · subtotal ' + rs(o.sub) + ', POS round-off ' + (o.total - o.sub >= 0 ? '+' : '') + rs(o.total - o.sub).replace('₹-', '-₹') + '</p>';
+  return h + '<ul class="log">' + S.log.map((x) => '<li><time>' + x[0] + '</time>' + x[1] + '</li>').join('') + '</ul>';
+}
+
+function render() {
+  $('#screen').innerHTML = screen();
+  $('#lang').textContent = S.lang === 'en' ? 'தமிழ்' : 'English';
+  $('#screen').lang = S.lang;
+  const tt = totals(S.lines);
+  const bar = $('#bar');
+  bar.hidden = !tt.n || S.screen === 'basket' || S.screen === 'ticket';
+  bar.innerHTML = tt.n + ' ' + (tt.n === 1 ? t('item') : t('items')) + ' · ' + (tt.est ? '~' : '') + rs(tt.sum) + ' <em>' + t('view') + ' →</em>';
+  $('#cash').innerHTML = cashier();
+}
+function printSlip() {
+  const r = $('#roll');
+  r.innerHTML = '<div class="paper out">' + slip(S.order).replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</div>';
+}
+
+$('#screen').addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  if (b.dataset.add) { if (byId(b.dataset.add).by === 'weight') S.screen = 'weight'; else { addItem(b.dataset.add); say(t('added') + ' ' + name(byId(b.dataset.add))); } }
+  else if (b.dataset.q) { const l = S.lines[b.dataset.q]; setQ(b.dataset.q, b.dataset.d === '1' ? l.q + 1 : (byId(b.dataset.q).by === 'weight' ? 0 : l.q - 1)); }
+  else if (b.dataset.go) { S.screen = b.dataset.go; if (b.dataset.go === 'scan') { S.scanned = false; setTimeout(() => { if (S.screen === 'scan' && !S.scanned) { S.scanned = true; addItem('milk'); say(t('added') + ' ' + name(byId('milk'))); render(); } }, 1100); } }
+  else if (b.hasAttribute('data-another')) { addItem('milk'); say(t('added') + ' ' + name(byId('milk'))); }
+  else if (b.dataset.w !== undefined) { addItem('tom', Number(b.dataset.w) || null); S.screen = 'home'; say(t('added') + ' ' + name(byId('tom'))); }
+  else if (b.hasAttribute('data-pay')) {
+    const d = new Date();
+    S.order = { code: 'M042', counter: 2, status: 'waiting', lines: JSON.parse(JSON.stringify(S.lines)), weighed: null, time: d.toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }), date: d.toISOString().slice(0, 10).replace(/-/g, '') };
+    S.lines = {}; S.screen = 'ticket';
+    log('Basket M042 submitted; held basket HB-000042 created in POS');
+    log('Original slip sent to Counter 2 printer');
+    printSlip();
+    say('Order M042. Go to Counter 2.');
+  }
+  render();
+});
+$('#bar').addEventListener('click', () => { S.screen = 'basket'; render(); });
+$('#lang').addEventListener('click', () => { S.lang = S.lang === 'en' ? 'ta' : 'en'; render(); });
+$('#cash').addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  const o = S.order;
+  if (!b || !o) return;
+  if (b.hasAttribute('data-claim')) { o.status = 'checking'; log('Opened by Cashier Priya at Counter 2'); }
+  else if (b.hasAttribute('data-weigh')) {
+    const g = Math.round(Number($('#grams').value));
+    if (!(g >= 1 && g <= 25000)) { say('Enter grams between 1 and 25000'); return; }
+    o.weighed = g; log('Tomato weighed: ' + g + ' g (customer estimate ' + (o.lines.tom.g ? o.lines.tom.g + ' g' : 'none') + ')');
+  } else if (b.dataset.m) {
+    const sub = totals(o.lines, o.lines.tom ? o.weighed : undefined).sum;
+    o.sub = sub; o.total = Math.floor((sub + 50) / 100) * 100; o.method = b.dataset.m; o.bill = 'MPC/2026/000042'; o.status = 'paid';
+    log(b.dataset.m + ' payment confirmed by POS; bill ' + o.bill + ' for ' + rs(o.total));
+    say('Paid ' + rs(o.total));
+  }
+  render();
+});
+$('#reset').addEventListener('click', () => { const lang = S.lang; S = fresh(); S.lang = lang; $('#roll').innerHTML = '<div class="idle">Waiting for a basket…</div>'; render(); });
+
+$('#tests').innerHTML = TESTS.map((r) => '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td><td class="res">✓ ' + r[2] + '</td></tr>').join('');
+$('#ready').innerHTML = READY.map((x) => '<li>' + x + '</li>').join('');
+$('#limits').innerHTML = LIMITS.map((x) => '<li>' + x + '</li>').join('');
+let done = {};
+try { done = JSON.parse(localStorage.getItem('mpc-golive') || '{}'); } catch (e) { done = {}; }
+$('#need').innerHTML = NEED.map((n, i) => '<li><input type="checkbox" id="need' + i + '"' + (done[i] ? ' checked' : '') + '><label for="need' + i + '"><strong>' + n[0] + '</strong><span>' + n[1] + '</span></label></li>').join('');
+$('#need').addEventListener('change', (e) => { done[e.target.id.slice(4)] = e.target.checked; try { localStorage.setItem('mpc-golive', JSON.stringify(done)); } catch (er) { } });
+$('#cmds').innerHTML = CMDS.map((c) => '<div class="cmd"><code>' + c + '</code><button type="button" data-copy="' + c + '">Copy</button></div>').join('');
+$('#cmds').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-copy]');
+  if (!b) return;
+  navigator.clipboard.writeText(b.dataset.copy).then(() => { b.textContent = 'Copied'; }, () => { b.textContent = 'Select and copy'; });
+});
+
+S = fresh();
+render();
+}
+</script>
+</body>
+</html>
