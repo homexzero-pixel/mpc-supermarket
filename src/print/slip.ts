@@ -25,7 +25,11 @@ export function slipMoney(paise: number) {
   return `${neg ? '-' : ''}Rs.${Math.floor(a / 100).toLocaleString('en-IN')}.${String(a % 100).padStart(2, '0')}`;
 }
 
-export function wrap(s: string, width: number): string[] {
+export function wrap(input: string, width: number): string[] {
+  // keep leading indentation (used for the "2 x Rs.27.00" detail lines)
+  const lead = input.match(/^ */)![0];
+  if (lead && lead.length < width / 2) return wrap(input.slice(lead.length), width - lead.length).map((l) => lead + l);
+  const s = input;
   const words = s.split(/\s+/).filter(Boolean);
   const lines: string[] = [];
   let cur = '';

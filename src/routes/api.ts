@@ -5,6 +5,7 @@ import { rateLimit } from '../lib/ratelimit.js';
 import { asyncH, clientIp, langOf, noStore } from './helpers.js';
 import { ticketInner } from '../views/shop.js';
 import type { Item } from '../catalogue/service.js';
+import { config } from '../config.js';
 
 export function publicItem(i: Item) {
   return {
@@ -18,7 +19,7 @@ export function apiRoutes(ctx: AppContext) {
   const { catalogue, orders } = ctx;
 
   const lookupLimit = rateLimit({ windowMs: 60_000, max: 240, key: (req) => 'l:' + clientIp(req) });
-  const checkoutLimit = rateLimit({ windowMs: 10 * 60_000, max: 20, key: (req) => 'c:' + clientIp(req), message: 'Too many submissions from this phone. Please wait a few minutes or ask a cashier.' });
+  const checkoutLimit = rateLimit({ windowMs: 10 * 60_000, max: config.checkoutRateLimit, key: (req) => 'c:' + clientIp(req), message: 'Too many submissions from this phone. Please wait a few minutes or ask a cashier.' });
 
   r.use((_req, res, next) => {
     noStore(res);

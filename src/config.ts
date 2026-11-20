@@ -32,6 +32,8 @@ export const config = {
   catalogueSyncMinutes: Number(env('CATALOGUE_SYNC_MINUTES', '15')),
   trustProxy: env('TRUST_PROXY', 'false') === 'true',
   allowIndexing: env('ALLOW_INDEXING', 'false') === 'true',
+  /** basket submissions allowed per IP per 10 minutes (a whole family on shop Wi-Fi shares one IP) */
+  checkoutRateLimit: Number(env('CHECKOUT_RATE_LIMIT', '30')),
 };
 
 export function assertProductionConfig() {

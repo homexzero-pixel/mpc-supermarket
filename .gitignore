@@ -6,3 +6,4 @@ data/sim-prints/
 .env
 *.log
 test-results/
+data/*.token
