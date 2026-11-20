@@ -1,0 +1,42 @@
+{
+  "name": "madhuram-scan-and-shop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Madhuram Pazhamudhir Cholai (MPC) - Scan & Shop storefront, POS handoff and counter printing",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "dev": "NODE_OPTIONS='--disable-warning=ExperimentalWarning' tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node --disable-warning=ExperimentalWarning dist/src/server.js",
+    "agent": "node --disable-warning=ExperimentalWarning dist/agent/print-agent.js",
+    "agent:dev": "NODE_OPTIONS='--disable-warning=ExperimentalWarning' tsx agent/print-agent.ts",
+    "migrate": "NODE_OPTIONS='--disable-warning=ExperimentalWarning' tsx scripts/migrate.ts",
+    "seed:demo": "NODE_OPTIONS='--disable-warning=ExperimentalWarning' tsx scripts/seed-demo.ts",
+    "import:csv": "NODE_OPTIONS='--disable-warning=ExperimentalWarning' tsx scripts/import-csv.ts",
+    "create:staff": "NODE_OPTIONS='--disable-warning=ExperimentalWarning' tsx scripts/create-staff.ts",
+    "demo": "NODE_OPTIONS='--disable-warning=ExperimentalWarning' tsx scripts/demo.ts",
+    "demo:run": "NODE_OPTIONS='--disable-warning=ExperimentalWarning' tsx scripts/demo-purchase.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "NODE_OPTIONS='--disable-warning=ExperimentalWarning' tsx --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@fontsource/noto-sans-tamil": "^5.3.0",
+    "@fontsource/poppins": "^5.3.0",
+    "@zxing/library": "^0.21.3",
+    "cookie-parser": "^1.4.7",
+    "express": "^5.3.0",
+    "helmet": "^8.3.0",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.10",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.6",
+    "@types/qrcode": "^1.5.6",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
