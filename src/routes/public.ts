@@ -56,7 +56,7 @@ export function publicRoutes(ctx: AppContext) {
 
   // Entrance QR target: stable per-branch URL.
   r.get('/s/:slug', (req, res) => {
-    const b = orders.branchBySlug(req.params.slug);
+    const b = orders.branchBySlug(String(req.params.slug));
     if (!b) throw new HttpError(404, 'NOT_FOUND', 'Unknown store');
     res.cookie(IN_STORE_COOKIE, b.slug, { maxAge: 4 * 3600 * 1000, sameSite: 'lax', httpOnly: false, path: '/' });
     res.redirect(302, `/b/${b.slug}?instore=1`);
@@ -70,7 +70,7 @@ export function publicRoutes(ctx: AppContext) {
 
   r.get('/b/:slug', (req, res) => {
     const lang = langOf(req);
-    const branch = branchOr404(req.params.slug);
+    const branch = branchOr404(String(req.params.slug));
     const inStore = inStoreBranch(req) === branch.slug || req.query.instore === '1';
     const ld = storeJsonLd(branch);
     res.send(page(req, {
@@ -83,7 +83,7 @@ export function publicRoutes(ctx: AppContext) {
 
   function deptHandler(req: any, res: any, branch?: Row) {
     const lang = langOf(req);
-    const dept = catalogue.department(req.params.dept);
+    const dept = catalogue.department(String(req.params.dept));
     if (!dept) throw new HttpError(404, 'NOT_FOUND', 'Department not found');
     const total = catalogue.countInDepartment(dept.slug);
     if (!total) throw new HttpError(404, 'NOT_FOUND', 'Department not found');
@@ -101,7 +101,7 @@ export function publicRoutes(ctx: AppContext) {
     }));
   }
   r.get('/d/:dept', (req, res) => deptHandler(req, res));
-  r.get('/b/:slug/d/:dept', (req, res) => deptHandler(req, res, branchOr404(req.params.slug)));
+  r.get('/b/:slug/d/:dept', (req, res) => deptHandler(req, res, branchOr404(String(req.params.slug))));
 
   function searchHandler(req: any, res: any, branch?: Row) {
     const lang = langOf(req);
@@ -114,11 +114,11 @@ export function publicRoutes(ctx: AppContext) {
     }));
   }
   r.get('/search', (req, res) => searchHandler(req, res));
-  r.get('/b/:slug/search', (req, res) => searchHandler(req, res, branchOr404(req.params.slug)));
+  r.get('/b/:slug/search', (req, res) => searchHandler(req, res, branchOr404(String(req.params.slug))));
 
   r.get('/p/:slug', (req, res) => {
     const lang = langOf(req);
-    const item = catalogue.bySlug(req.params.slug);
+    const item = catalogue.bySlug(String(req.params.slug));
     if (!item) throw new HttpError(404, 'NOT_FOUND', 'Product not found');
     const dept = item.department ? catalogue.department(item.department) : undefined;
     const ib = inStoreBranch(req);
@@ -149,11 +149,11 @@ export function publicRoutes(ctx: AppContext) {
     noStore(res);
     res.setHeader('Referrer-Policy', 'no-referrer');
     const lang = langOf(req);
-    const order = orders.byTicket(req.params.token);
+    const order = orders.byTicket(String(req.params.token));
     if (!order) throw new HttpError(404, 'NOT_FOUND', 'Ticket not found');
     const branch = orders.branch(order.branch_id)!;
     res.send(page(req, { title: `Order ${order.code} — MPC`, noindex: true, branch, inStore: true, hideBasketBar: true, departments: [],
-      body: V.ticketPage(lang, { token: req.params.token, view: orders.ticketView(order), branch }) }));
+      body: V.ticketPage(lang, { token: String(req.params.token), view: orders.ticketView(order), branch }) }));
   });
 
   r.get('/visit', (req, res) => {
@@ -182,7 +182,7 @@ export function publicRoutes(ctx: AppContext) {
     res.type('image/svg+xml').set('Cache-Control', 'public, max-age=86400').send(itemSvg(item, dept?.color ? dept.color : undefined));
   });
   r.get('/img/dept/:slug.svg', (req, res) => {
-    res.type('image/svg+xml').set('Cache-Control', 'public, max-age=86400').send(deptSvg(req.params.slug, '#ffffff'));
+    res.type('image/svg+xml').set('Cache-Control', 'public, max-age=86400').send(deptSvg(String(req.params.slug), '#ffffff'));
   });
 
   // ---- SEO plumbing ----
