@@ -82,7 +82,4 @@
     });
   }
 
-  // focus the barcode box on the order screen so a USB scanner "types" straight into it
-  var addbc = document.getElementById('addbc');
-  if (addbc && !document.querySelector('.weigh-form input:invalid')) { /* leave focus to the cashier */ }
 })();

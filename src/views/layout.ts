@@ -19,14 +19,15 @@ export interface PageOpts {
   ogImage?: string;
   searchQuery?: string;
   defaultBranch?: string | null;
+  currentPath?: string;
 }
 
 export const ASSET_VERSION = '1';
 const asset = (p: string) => `${p}?v=${ASSET_VERSION}`;
 
-function langToggle(lang: Lang) {
+function langToggle(lang: Lang, currentPath = '/') {
   return html`<form method="post" action="/lang" class="lang-form">
-    <input type="hidden" name="lang" value="${lang === 'en' ? 'ta' : 'en'}">
+    <input type="hidden" name="lang" value="${lang === 'en' ? 'ta' : 'en'}"><input type="hidden" name="next" value="${currentPath}">
     <button class="chip lang-btn" type="submit" lang="${lang === 'en' ? 'ta' : 'en'}" aria-label="${lang === 'en' ? 'Switch to Tamil' : 'Switch to English'}">${t(lang, 'language')}</button>
   </form>`;
 }
@@ -94,7 +95,7 @@ ${config.demoMode ? html`<div class="demo-banner" role="note">${t(o.lang, 'demo_
       ${icon('search')}<input id="q-desk" name="q" type="search" value="${o.searchQuery ?? ''}" placeholder="${t(o.lang, 'search_placeholder')}" autocomplete="off" enterkeyhint="search">
     </form>
     <div class="header-actions">
-      ${langToggle(o.lang)}
+      ${langToggle(o.lang, o.currentPath)}
       <a class="icon-btn basket-link" href="/basket" aria-label="${t(o.lang, 'basket')}">${icon('basket')}<span class="badge" data-basket-count hidden>0</span></a>
     </div>
   </div>

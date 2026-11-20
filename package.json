@@ -20,7 +20,8 @@
     "demo": "NODE_OPTIONS='--disable-warning=ExperimentalWarning' tsx scripts/demo.ts",
     "demo:run": "NODE_OPTIONS='--disable-warning=ExperimentalWarning' tsx scripts/demo-purchase.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "NODE_OPTIONS='--disable-warning=ExperimentalWarning' tsx --test test/*.test.ts"
+    "test": "NODE_OPTIONS='--disable-warning=ExperimentalWarning' tsx --test test/*.test.ts",
+    "test:e2e": "NODE_OPTIONS='--disable-warning=ExperimentalWarning' tsx --test test/browser.e2e.ts"
   },
   "dependencies": {
     "@fontsource/noto-sans-tamil": "^5.3.0",

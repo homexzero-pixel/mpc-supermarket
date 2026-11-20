@@ -37,7 +37,7 @@ export function publicRoutes(ctx: AppContext) {
   }
 
   const page = (req: any, o: Omit<Parameters<typeof layout>[0], 'lang' | 'departments'> & { departments?: Row[] }) =>
-    layout({ lang: langOf(req), departments: catalogue.activeDepartments(), defaultBranch: defaultBranch()?.slug ?? null, ...o }).value;
+    layout({ lang: langOf(req), departments: catalogue.activeDepartments(), defaultBranch: defaultBranch()?.slug ?? null, currentPath: req.originalUrl, ...o }).value;
 
   r.get('/', (req, res) => {
     const lang = langOf(req);
@@ -166,11 +166,9 @@ export function publicRoutes(ctx: AppContext) {
   r.post('/lang', (req, res) => {
     const lang = req.body?.lang === 'ta' ? 'ta' : 'en';
     res.cookie('lang', lang, { maxAge: 365 * 86400 * 1000, sameSite: 'lax', path: '/' });
-    let back = '/';
-    try {
-      // only ever redirect to a path on this site
-      if (req.headers.referer) { const u = new URL(req.headers.referer, base); back = u.pathname + u.search; }
-    } catch { /* ignore */ }
+    // only ever redirect to a path on this site
+    let back = typeof req.body?.next === 'string' ? req.body.next : '/';
+    if (!/^\/(?!\/)[^\\]*$/.test(back)) back = '/';
     res.redirect(303, back.startsWith('/') && !back.startsWith('//') ? back : '/');
   });
 
